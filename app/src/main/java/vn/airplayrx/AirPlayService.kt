@@ -15,7 +15,7 @@ import java.net.NetworkInterface
 import java.security.MessageDigest
 import java.util.UUID
 import javax.jmdns.JmDNS
-import javax.jmdns.ServiceInfo
+import javax.jmdns.ServiceInfo as MdnsInfo
 
 class AirPlayService : Service() {
     companion object {
@@ -94,8 +94,8 @@ class AirPlayService : Service() {
                     "sf" to "0x4", "pk" to pk)
                 val j = JmDNS.create(addr, "AirPlay-" + devId.replace(":", ""))
                 jmdns = j
-                j.registerService(ServiceInfo.create("_airplay._tcp.local.", name, AirPlayServer.PORT, 0, 0, air)); regAirplay = "OK"
-                j.registerService(ServiceInfo.create("_raop._tcp.local.", devId.replace(":", "") + "@" + name, AirPlayServer.PORT, 0, 0, raop)); regRaop = "OK"
+                j.registerService(MdnsInfo.create("_airplay._tcp.local.", name, AirPlayServer.PORT, 0, 0, air)); regAirplay = "OK"
+                j.registerService(MdnsInfo.create("_raop._tcp.local.", devId.replace(":", "") + "@" + name, AirPlayServer.PORT, 0, 0, raop)); regRaop = "OK"
             } catch (e: Exception) { regAirplay = "LỖI " + e.message; regRaop = regAirplay }
         }.start()
     }
