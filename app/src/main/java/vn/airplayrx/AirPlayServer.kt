@@ -18,20 +18,22 @@ class AirPlayServer(private val deviceId: String, private val onPlay: (String, D
         const val PORT = 7000
         /** true: bỏ qua lệnh /stop từ iPhone -> video chỉ dừng khi iPhone phát video KHÁC. */
         const val IGNORE_REMOTE_STOP = true
-        const val FEATURES = 0x19 // video + volume + HLS (chỉnh nếu iPhone không thấy thiết bị)
+        const val FEATURES_LOW = 0x5A7FFFF7L // giá trị Apple TV, iPhone nhận diện được
+        const val FEATURES_TXT = "0x5A7FFFF7,0x1E"
     }
     private var server: ServerSocket? = null
     private val events = CopyOnWriteArrayList<OutputStream>()
     @Volatile private var running = false
+    var onStatus: ((String) -> Unit)? = null
 
     fun start() {
         running = true
         Thread {
             try {
                 val s = ServerSocket().apply { reuseAddress = true; bind(InetSocketAddress(PORT)) }
-                server = s
+                server = s; onStatus?.invoke("OK")
                 while (running) { val c = s.accept(); Thread { handle(c) }.start() }
-            } catch (_: Exception) {}
+            } catch (e: Exception) { onStatus?.invoke("LỖI " + e.message) }
         }.start()
     }
     fun stop() { running = false; try { server?.close() } catch (_: Exception) {} }
@@ -71,7 +73,7 @@ class AirPlayServer(private val deviceId: String, private val onPlay: (String, D
         when (path) {
             "/info" -> reply(out, 404)
             "/server-info" -> reply(out, 200, "text/x-apple-plist+xml", plist(
-                "<key>deviceid</key><string>$deviceId</string><key>features</key><integer>$FEATURES</integer>" +
+                "<key>deviceid</key><string>$deviceId</string><key>features</key><integer>$FEATURES_LOW</integer>" +
                 "<key>model</key><string>AppleTV3,2</string><key>protovers</key><string>1.0</string><key>srcvers</key><string>220.68</string>"))
             "/play" -> {
                 val r = parsePlay(body)

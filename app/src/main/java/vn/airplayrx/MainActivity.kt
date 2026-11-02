@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.Bundle
 import android.view.*
 import android.widget.FrameLayout
@@ -15,6 +17,10 @@ import androidx.media3.ui.PlayerView
 class MainActivity : Activity() {
     private lateinit var view: PlayerView
     private lateinit var hint: TextView
+    private val h = Handler(Looper.getMainLooper())
+    private val tick = object : Runnable { override fun run() {
+        hint.text = "Sẵn sàng nhận AirPlay\nTrên iPhone chọn: AirPlay ${Build.MODEL}\n\n" + AirPlayService.status
+        h.postDelayed(this, 1000) } }
     private val listener = object : Player.Listener {
         override fun onPlaybackStateChanged(s: Int) = updateHint()
     }
@@ -36,10 +42,10 @@ class MainActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
-        val p = PlayerHolder.get(this); view.player = p; p.addListener(listener); updateHint()
+        val p = PlayerHolder.get(this); view.player = p; p.addListener(listener); updateHint(); h.post(tick)
     }
     override fun onStop() {
-        PlayerHolder.get(this).removeListener(listener); view.player = null // âm thanh/video vẫn chạy trong service
+        h.removeCallbacks(tick); PlayerHolder.get(this).removeListener(listener); view.player = null // âm thanh/video vẫn chạy trong service
         super.onStop()
     }
     override fun onResume() { super.onResume(); hideSystemUi() }
@@ -49,6 +55,7 @@ class MainActivity : Activity() {
         val s = view.player?.playbackState ?: Player.STATE_IDLE
         hint.visibility = if (s == Player.STATE_IDLE || s == Player.STATE_ENDED) View.VISIBLE else View.GONE
     }
+
     @Suppress("DEPRECATION")
     private fun hideSystemUi() {
         if (Build.VERSION.SDK_INT >= 30) {
@@ -57,7 +64,7 @@ class MainActivity : Activity() {
                 it.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
                 it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
-       } else {
+        } else {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
