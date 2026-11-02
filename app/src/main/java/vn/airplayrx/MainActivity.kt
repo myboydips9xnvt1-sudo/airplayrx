@@ -49,7 +49,7 @@ class MainActivity : Activity() {
         val s = view.player?.playbackState ?: Player.STATE_IDLE
         hint.visibility = if (s == Player.STATE_IDLE || s == Player.STATE_ENDED) View.VISIBLE else View.GONE
     }
-
+    @Suppress("DEPRECATION")
     private fun hideSystemUi() {
         if (Build.VERSION.SDK_INT >= 30) {
             window.setDecorFitsSystemWindows(false)
@@ -57,7 +57,7 @@ class MainActivity : Activity() {
                 it.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
                 it.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
-        } else @Suppress("DEPRECATION") {
+       } else {
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
