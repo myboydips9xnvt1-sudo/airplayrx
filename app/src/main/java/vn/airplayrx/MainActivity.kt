@@ -4,7 +4,10 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import android.os.Handler
 import android.os.Looper
 import android.os.Bundle
@@ -38,6 +41,18 @@ class MainActivity : Activity() {
         val svc = Intent(this, AirPlayService::class.java)
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(svc) else startService(svc)
         hideSystemUi()
+        if (b == null) askPermissions()
+    }
+
+    /** Quyền để app tự bật lên khi iPhone phát video và không bị hệ thống tắt ngầm. */
+    private fun askPermissions() {
+        try {
+            if (!Settings.canDrawOverlays(this))
+                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+            val pm = getSystemService(PowerManager::class.java)
+            if (!pm.isIgnoringBatteryOptimizations(packageName))
+                startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName")))
+        } catch (_: Exception) {}
     }
 
     override fun onStart() {
